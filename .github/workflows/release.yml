@@ -1,0 +1,23 @@
+# This GitHub Actions workflow is intended for the Action "Release Please".
+# It is automatically triggered by a push event (like an PR merge) to the "main" branch.
+# The workflow uses the googleapis/release-please-action@v4 action to create a release.
+# More: https://github.com/googleapis/release-please-action/tree/main
+
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          release-type: terraform-module
