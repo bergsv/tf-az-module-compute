@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/bergsv/tf-az-module-compute/compare/v0.1.0...v0.2.0) (2025-03-12)
+
+
+### Features
+
+* enhance vm module with advanced configuration options ([4cd3aa5](https://github.com/bergsv/tf-az-module-compute/commit/4cd3aa583d28d86b99029fb84feae997b00fd56b))
+
 ## 0.1.0 (2025-03-11)
 
 
