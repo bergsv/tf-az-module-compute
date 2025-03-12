@@ -54,7 +54,7 @@ output "os_type" {
 
 output "os_disk_id" {
   description = "The ID of the OS disk"
-  value       = var.compute_os_type == "windows" ? azurerm_windows_virtual_machine.vm[0].os_disk[0].managed_disk_id : azurerm_linux_virtual_machine.vm[0].os_disk[0].managed_disk_id
+  value       = var.compute_os_type == "windows" ? azurerm_windows_virtual_machine.vm[0].os_disk[0].id : azurerm_linux_virtual_machine.vm[0].os_disk[0].id
 }
 
 output "resource_group_id" {
