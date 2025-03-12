@@ -12,11 +12,32 @@ This module creates Azure virtual machines with associated resources, including 
 - Integration with backup services
 - Availability zone and availability set support
 
+## Quick Start
+
+```terraform
+module "simple_vm" {
+  source = "path/to/tf-az-module-compute"
+
+  # Required parameters
+  compute_resource_group_name = "rg-simple-example"
+  compute_location            = "westeurope"
+  compute_nic_name            = "nic-example"
+  compute_subnet_id           = "/subscriptions/.../resourceGroups/.../providers/Microsoft.Network/virtualNetworks/.../subnets/..."
+  compute_vm_name             = "vm-example"
+  
+  # Authentication (choose one based on OS type)
+  compute_os_type             = "windows"  # or "linux"
+  compute_admin_username      = "adminuser"
+  compute_admin_password      = "YourSecureP@ssw0rd!"  # For Windows VMs
+  # compute_ssh_public_key    = "ssh-rsa AAAA..."      # For Linux VMs
+}
+```
+
 ## Usage with Boot Diagnostics and Backup
 
 ```terraform
 module "vm_example" {
-  source = "./modules/azure-compute"
+  source = "path/to/tf-az-module-compute"
 
   compute_create_resource_group    = true
   compute_resource_group_name      = "rg-compute-example"
@@ -42,6 +63,10 @@ module "vm_example" {
   # Security and management
   compute_identity_type            = "SystemAssigned"
   
+  # Backup integration with existing Recovery Services Vault
+  compute_backup_enabled           = true
+  compute_backup_policy_id         = "/subscriptions/.../resourceGroups/rg-backup/providers/Microsoft.RecoveryServices/vaults/rsv-central/backupPolicies/daily"
+  
   compute_data_disks = [
     {
       disk_size_gb         = 128
@@ -58,13 +83,87 @@ module "vm_example" {
 }
 ```
 
+## Common Configuration Examples
+
+### 1. Linux VM with SSH Authentication
+
+```terraform
+module "linux_vm" {
+  source = "path/to/tf-az-module-compute"
+  
+  compute_resource_group_name = "rg-linux-example"
+  compute_location            = "eastus"
+  compute_nic_name            = "nic-linux"
+  compute_subnet_id           = azurerm_subnet.example.id
+  compute_vm_name             = "vm-linux"
+  
+  # Linux specific settings
+  compute_os_type             = "linux"
+  compute_admin_username      = "adminuser"
+  compute_ssh_public_key      = "ssh-rsa AAAA..."
+  
+  # Image settings for Ubuntu
+  compute_image_publisher     = "Canonical"
+  compute_image_offer         = "UbuntuServer"
+  compute_image_sku           = "18.04-LTS"
+}
+```
+
+### 2. Windows VM with Public IP
+
+```terraform
+module "windows_vm_public" {
+  source = "path/to/tf-az-module-compute"
+  
+  compute_resource_group_name = "rg-windows-public"
+  compute_location            = "westus2"
+  compute_nic_name            = "nic-win-public"
+  compute_subnet_id           = azurerm_subnet.example.id
+  compute_vm_name             = "vm-win-public"
+  
+  # Windows specific settings
+  compute_os_type             = "windows"
+  compute_admin_username      = "adminuser"
+  compute_admin_password      = var.secure_password
+  
+  # Public IP settings
+  compute_public_ip_enabled   = true
+  compute_public_ip_allocation = "Static"
+  compute_public_ip_sku       = "Standard"
+}
+```
+
 ## Important Considerations for Backup Integration
 
-1. **Recovery Services Vault**: The backup vault should be created separately and referenced in the backup configuration.
-2. **Backup Policies**: Define backup policies in the Recovery Services Vault and reference them in your backup protected VM resources.
-3. **Identity Requirements**: System-assigned identities may require proper RBAC roles to allow backup operations.
+1. **Recovery Services Vault**: The backup vault should be created separately and referenced via the `compute_backup_policy_id` parameter.
+2. **Backup Policies**: Define backup policies in the Recovery Services Vault before referencing them in the compute module.
+3. **Identity Requirements**: System-assigned identity (`compute_identity_type = "SystemAssigned"`) is recommended for backup operations.
 4. **Cross-Resource Group Operations**: When the backup vault is in a different resource group, ensure proper permissions are in place.
-5. **Lifecycle Management**: Use the `depends_on` attribute when creating backup protected VM resources to ensure VM creation completes first.
+5. **Technical Implementation**: The module parses the backup policy ID to determine the resource group and recovery vault name.
+
+## Module Structure
+
+```
+tf-az-module-compute/
+├── main.tf        - Main resources (VMs, NICs, etc.)
+├── variables.tf   - Input variables
+├── outputs.tf     - Output definitions
+└── README.md      - Documentation (this file)
+```
+
+## Required Variables
+
+| Name | Description | Type |
+|------|-------------|------|
+| `compute_resource_group_name` | Name of the resource group to create | `string` |
+| `compute_location` | Azure region where resources will be created | `string` |
+| `compute_subnet_id` | ID of the subnet to connect the VM to | `string` |
+| `compute_vm_name` | Name of the virtual machine | `string` |
+| `compute_nic_name` | Name of the network interface | `string` |
+
+Plus authentication variables based on the OS type:
+- For Windows: `compute_admin_username` and `compute_admin_password`
+- For Linux: `compute_admin_username` and `compute_ssh_public_key`
 
 ## Security Recommendations
 
@@ -73,9 +172,12 @@ module "vm_example" {
 3. **OS Updates**: Plan for OS patching and updates through Azure Automation or VM extensions.
 4. **Disk Encryption**: Consider enabling Azure Disk Encryption for sensitive workloads.
 
-## Monitoring and Management
+## Common Errors and Solutions
 
-1. **VM Extensions**: Consider adding diagnostic extensions such as Azure Monitor Agent.
-2. **Log Analytics Workspace**: Connect VMs to a Log Analytics workspace for detailed monitoring.
-3. **Custom Script Extensions**: For post-deployment configuration, consider using custom script extensions.
+| Error | Solution |
+|-------|----------|
+| "Resource group already exists" | Set `compute_create_resource_group = false` and provide the existing resource group name in `compute_existing_resource_group_name` |
+| "Public IP not found" | Ensure `compute_public_ip_enabled = true` |
+| "Authentication failed" | Check that you've provided the correct password for Windows or SSH key for Linux |
+| "Backup policy not found" | Verify the backup policy ID is correct and accessible |
 

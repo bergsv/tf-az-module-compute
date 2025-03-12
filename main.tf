@@ -1,3 +1,4 @@
+# Resource Group - Creates a new resource group if specified
 resource "azurerm_resource_group" "resource_group" {
   count    = var.compute_create_resource_group ? 1 : 0
   name     = var.compute_resource_group_name
@@ -5,11 +6,13 @@ resource "azurerm_resource_group" "resource_group" {
   tags     = var.compute_tags
 }
 
+# Local values for resource group properties - determines whether to use new or existing RG
 locals {
   resource_group_name = var.compute_create_resource_group ? azurerm_resource_group.resource_group[0].name : var.compute_existing_resource_group_name
   resource_group_location = var.compute_create_resource_group ? azurerm_resource_group.resource_group[0].location : var.compute_location
 }
 
+# Network Interface - Primary network interface for the VM
 resource "azurerm_network_interface" "nic" {
   name                = var.compute_nic_name
   location            = local.resource_group_location
@@ -26,6 +29,7 @@ resource "azurerm_network_interface" "nic" {
   tags = var.compute_tags
 }
 
+# Public IP - Created only when enabled through variables
 resource "azurerm_public_ip" "public_ip" {
   count               = var.compute_public_ip_enabled ? 1 : 0
   name                = "${var.compute_vm_name}-pip"
@@ -36,6 +40,7 @@ resource "azurerm_public_ip" "public_ip" {
   tags                = var.compute_tags
 }
 
+# Windows Virtual Machine - Created when OS type is set to "windows"
 resource "azurerm_windows_virtual_machine" "vm" {
   count                 = var.compute_os_type == "windows" ? 1 : 0
   name                  = var.compute_vm_name
@@ -88,6 +93,7 @@ resource "azurerm_windows_virtual_machine" "vm" {
   }
 }
 
+# Linux Virtual Machine - Created when OS type is set to "linux"
 resource "azurerm_linux_virtual_machine" "vm" {
   count                 = var.compute_os_type == "linux" ? 1 : 0
   name                  = var.compute_vm_name
@@ -144,6 +150,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 }
 
+# Data Disks - Creates additional managed disks as specified in the variables
 resource "azurerm_managed_disk" "data_disks" {
   count                = length(var.compute_data_disks)
   name                 = "${var.compute_vm_name}-disk-${count.index + 1}"
@@ -155,10 +162,25 @@ resource "azurerm_managed_disk" "data_disks" {
   tags                 = var.compute_tags
 }
 
+# Data Disk Attachments - Attaches the data disks to the VM
 resource "azurerm_virtual_machine_data_disk_attachment" "disk_attachments" {
   count              = length(var.compute_data_disks)
   managed_disk_id    = azurerm_managed_disk.data_disks[count.index].id
   virtual_machine_id = var.compute_os_type == "windows" ? azurerm_windows_virtual_machine.vm[0].id : azurerm_linux_virtual_machine.vm[0].id
   lun                = lookup(var.compute_data_disks[count.index], "lun", 10 + count.index)
   caching            = lookup(var.compute_data_disks[count.index], "caching", "None")
+}
+
+# VM Backup - Registers the VM with a backup policy when enabled
+resource "azurerm_backup_protected_vm" "vm_backup" {
+  count               = var.compute_backup_enabled && var.compute_backup_policy_id != "" ? 1 : 0
+  resource_group_name = element(split("/", var.compute_backup_policy_id), 4)
+  recovery_vault_name = element(split("/", var.compute_backup_policy_id), 8)
+  source_vm_id        = var.compute_os_type == "windows" ? azurerm_windows_virtual_machine.vm[0].id : azurerm_linux_virtual_machine.vm[0].id
+  backup_policy_id    = var.compute_backup_policy_id
+
+  depends_on = [
+    azurerm_windows_virtual_machine.vm,
+    azurerm_linux_virtual_machine.vm
+  ]
 }

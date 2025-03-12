@@ -71,3 +71,13 @@ output "vm_zone" {
   description = "The availability zone of the VM (if assigned)"
   value       = var.compute_availability_zone
 }
+
+output "vm_backup_protected_id" {
+  description = "The ID of the backup protected VM resource (if backup is enabled)"
+  value       = var.compute_backup_enabled && var.compute_backup_policy_id != "" ? try(azurerm_backup_protected_vm.vm_backup[0].id, null) : null
+}
+
+output "backup_enabled" {
+  description = "Indicates whether backup is enabled for the VM"
+  value       = var.compute_backup_enabled && var.compute_backup_policy_id != ""
+}

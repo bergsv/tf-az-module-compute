@@ -8,6 +8,10 @@ variable "compute_create_resource_group" {
 variable "compute_resource_group_name" {
   description = "Name of the resource group to create"
   type        = string
+  validation {
+    condition     = length(var.compute_resource_group_name) > 1 && length(var.compute_resource_group_name) <= 90
+    error_message = "Resource group name must be between 1 and 90 characters."
+  }
 }
 
 variable "compute_existing_resource_group_name" {
@@ -70,7 +74,7 @@ variable "compute_vm_name" {
 }
 
 variable "compute_vm_size" {
-  description = "Size/SKU of the virtual machine"
+  description = "Size/SKU of the virtual machine (e.g., Standard_B2as_v2, Standard_D2s_v3)"
   type        = string
   default     = "Standard_B2as_v2"
 }
@@ -92,10 +96,14 @@ variable "compute_admin_username" {
 }
 
 variable "compute_admin_password" {
-  description = "Password for the VM admin (for Windows VMs)"
+  description = "Password for the VM admin (for Windows VMs). Must be at least 12 characters with a mix of uppercase, lowercase, numbers, and special characters"
   type        = string
   default     = ""
   sensitive   = true
+  validation {
+    condition     = var.compute_admin_password == "" || length(var.compute_admin_password) >= 12
+    error_message = "Admin password must be at least 12 characters when provided."
+  }
 }
 
 variable "compute_ssh_public_key" {
@@ -112,9 +120,13 @@ variable "compute_os_disk_caching" {
 }
 
 variable "compute_os_disk_storage_account_type" {
-  description = "Storage account type for OS disk"
+  description = "Storage account type for OS disk (StandardSSD_LRS, Premium_LRS, StandardSSD_ZRS, Premium_ZRS)"
   type        = string
   default     = "StandardSSD_LRS"
+  validation {
+    condition     = contains(["Standard_LRS", "StandardSSD_LRS", "Premium_LRS", "StandardSSD_ZRS", "Premium_ZRS"], var.compute_os_disk_storage_account_type)
+    error_message = "OS disk storage type must be one of Standard_LRS, StandardSSD_LRS, Premium_LRS, StandardSSD_ZRS, or Premium_ZRS."
+  }
 }
 
 # Image Reference Variables
