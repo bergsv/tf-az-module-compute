@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/bergsv/tf-az-module-compute/compare/v0.2.0...v0.2.1) (2025-03-12)
+
+
+### Bug Fixes
+
+* **main:** data disk placement ([fb34903](https://github.com/bergsv/tf-az-module-compute/commit/fb34903dfdf1614829d1c0f1520ed186a40a08eb))
+* **outputs:** disk id ([4618f01](https://github.com/bergsv/tf-az-module-compute/commit/4618f01cf1e1c2b076651c9939389250cd359cc8))
+
 ## [0.2.0](https://github.com/bergsv/tf-az-module-compute/compare/v0.1.0...v0.2.0) (2025-03-12)
 
 
