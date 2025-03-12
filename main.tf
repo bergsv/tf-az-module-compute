@@ -159,6 +159,7 @@ resource "azurerm_managed_disk" "data_disks" {
   storage_account_type = lookup(var.compute_data_disks[count.index], "storage_account_type", "StandardSSD_LRS")
   create_option        = lookup(var.compute_data_disks[count.index], "create_option", "Empty")
   disk_size_gb         = lookup(var.compute_data_disks[count.index], "disk_size_gb", 128)
+  zone                 = var.compute_availability_zone
   tags                 = var.compute_tags
 }
 
