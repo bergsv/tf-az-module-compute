@@ -33,11 +33,6 @@ output "public_ip_address" {
   value       = var.compute_public_ip_enabled ? azurerm_public_ip.public_ip[0].ip_address : null
 }
 
-output "data_disk_ids" {
-  description = "The IDs of the data disks"
-  value       = [for disk in azurerm_managed_disk.data_disks : disk.id]
-}
-
 output "vm_principal_id" {
   description = "The Principal ID of the system-assigned identity of the VM (if enabled)"
   value       = var.compute_identity_type == "SystemAssigned" || var.compute_identity_type == "SystemAssigned, UserAssigned" ? (
@@ -50,11 +45,6 @@ output "vm_principal_id" {
 output "os_type" {
   description = "The type of OS of the VM (windows or linux)"
   value       = var.compute_os_type
-}
-
-output "os_disk_id" {
-  description = "The ID of the OS disk"
-  value       = var.compute_os_type == "windows" ? azurerm_windows_virtual_machine.vm[0].os_disk[0].id : azurerm_linux_virtual_machine.vm[0].os_disk[0].id
 }
 
 output "resource_group_id" {
@@ -70,14 +60,4 @@ output "computer_name" {
 output "vm_zone" {
   description = "The availability zone of the VM (if assigned)"
   value       = var.compute_availability_zone
-}
-
-output "vm_backup_protected_id" {
-  description = "The ID of the backup protected VM resource (if backup is enabled)"
-  value       = var.compute_backup_enabled && var.compute_backup_policy_id != "" ? try(azurerm_backup_protected_vm.vm_backup[0].id, null) : null
-}
-
-output "backup_enabled" {
-  description = "Indicates whether backup is enabled for the VM"
-  value       = var.compute_backup_enabled && var.compute_backup_policy_id != ""
 }

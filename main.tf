@@ -10,11 +10,12 @@ resource "azurerm_resource_group" "resource_group" {
 locals {
   resource_group_name = var.compute_create_resource_group ? azurerm_resource_group.resource_group[0].name : var.compute_existing_resource_group_name
   resource_group_location = var.compute_create_resource_group ? azurerm_resource_group.resource_group[0].location : var.compute_location
+  nic_name = var.compute_nic_name != "" ? var.compute_nic_name : "${var.compute_vm_name}-nic"
 }
 
 # Network Interface - Primary network interface for the VM
 resource "azurerm_network_interface" "nic" {
-  name                = var.compute_nic_name
+  name                = local.nic_name
   location            = local.resource_group_location
   resource_group_name = local.resource_group_name
 
@@ -69,7 +70,7 @@ resource "azurerm_windows_virtual_machine" "vm" {
   dynamic "boot_diagnostics" {
     for_each = var.compute_boot_diagnostics_enabled ? [1] : []
     content {
-      storage_account_uri = var.compute_boot_diagnostics_storage_account_uri != "" ? var.compute_boot_diagnostics_storage_account_uri : null
+      storage_account_uri = null  # Setting to null explicitly enables managed storage
     }
   }
 
@@ -82,15 +83,6 @@ resource "azurerm_windows_virtual_machine" "vm" {
   }
 
   tags = var.compute_tags
-
-  lifecycle {
-    ignore_changes = [
-      # Ignore changes to tags that might be managed outside of Terraform
-      tags["backup"],
-      # Ignore changes to boot diagnostics that might be updated by the backup service
-      boot_diagnostics,
-    ]
-  }
 }
 
 # Linux Virtual Machine - Created when OS type is set to "linux"
@@ -126,7 +118,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   dynamic "boot_diagnostics" {
     for_each = var.compute_boot_diagnostics_enabled ? [1] : []
     content {
-      storage_account_uri = var.compute_boot_diagnostics_storage_account_uri != "" ? var.compute_boot_diagnostics_storage_account_uri : null
+      storage_account_uri = null  # Setting to null explicitly enables managed storage
     }
   }
 
@@ -139,15 +131,6 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 
   tags = var.compute_tags
-
-  lifecycle {
-    ignore_changes = [
-      # Ignore changes to tags that might be managed outside of Terraform
-      tags["backup"],
-      # Ignore changes to boot diagnostics that might be updated by the backup service
-      boot_diagnostics,
-    ]
-  }
 }
 
 # Data Disks - Creates additional managed disks as specified in the variables
@@ -170,18 +153,4 @@ resource "azurerm_virtual_machine_data_disk_attachment" "disk_attachments" {
   virtual_machine_id = var.compute_os_type == "windows" ? azurerm_windows_virtual_machine.vm[0].id : azurerm_linux_virtual_machine.vm[0].id
   lun                = lookup(var.compute_data_disks[count.index], "lun", 10 + count.index)
   caching            = lookup(var.compute_data_disks[count.index], "caching", "None")
-}
-
-# VM Backup - Registers the VM with a backup policy when enabled
-resource "azurerm_backup_protected_vm" "vm_backup" {
-  count               = var.compute_backup_enabled && var.compute_backup_policy_id != "" ? 1 : 0
-  resource_group_name = element(split("/", var.compute_backup_policy_id), 4)
-  recovery_vault_name = element(split("/", var.compute_backup_policy_id), 8)
-  source_vm_id        = var.compute_os_type == "windows" ? azurerm_windows_virtual_machine.vm[0].id : azurerm_linux_virtual_machine.vm[0].id
-  backup_policy_id    = var.compute_backup_policy_id
-
-  depends_on = [
-    azurerm_windows_virtual_machine.vm,
-    azurerm_linux_virtual_machine.vm
-  ]
 }

@@ -27,8 +27,9 @@ variable "compute_location" {
 
 # Network Interface Variables
 variable "compute_nic_name" {
-  description = "Name of the network interface"
+  description = "Name of the network interface (defaults to vm_name-nic if not specified)"
   type        = string
+  default     = ""
 }
 
 variable "compute_subnet_id" {
@@ -176,28 +177,15 @@ variable "compute_tags" {
 
 # Boot Diagnostics Variables
 variable "compute_boot_diagnostics_enabled" {
-  description = "Enable or disable boot diagnostics"
+  description = "Enable or disable boot diagnostics. When enabled with no storage_account_uri, managed storage is used"
   type        = bool
   default     = true
 }
 
 variable "compute_boot_diagnostics_storage_account_uri" {
-  description = "Storage account URI for boot diagnostics. If not provided, a managed storage account will be used"
+  description = "Storage account URI for boot diagnostics. If not provided or empty, a managed storage account will be used"
   type        = string
   default     = ""
-}
-
-# Backup Integration Variables
-variable "compute_backup_policy_id" {
-  description = "ID of a backup policy to assign to the VM (optional)"
-  type        = string
-  default     = ""
-}
-
-variable "compute_backup_enabled" {
-  description = "Boolean flag to indicate if the VM should be setup for backup"
-  type        = bool
-  default     = false
 }
 
 # Additional VM Configuration Variables
