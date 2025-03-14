@@ -6,9 +6,9 @@ resource "azurerm_resource_group" "resource_group" {
   tags     = var.compute_tags
 }
 
-# Local values for resource group properties - determines whether to use new or existing RG
+# Local values for resource group and nic properties
 locals {
-  resource_group_name = var.compute_create_resource_group ? azurerm_resource_group.resource_group[0].name : var.compute_existing_resource_group_name
+  resource_group_name = var.compute_create_resource_group ? azurerm_resource_group.resource_group[0].name : var.compute_resource_group_name
   resource_group_location = var.compute_create_resource_group ? azurerm_resource_group.resource_group[0].location : var.compute_location
   nic_name = var.compute_nic_name != "" ? var.compute_nic_name : "${var.compute_vm_name}-nic"
 }
