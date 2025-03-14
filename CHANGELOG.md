@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/bergsv/tf-az-module-compute/compare/v0.2.1...v0.3.0) (2025-03-14)
+
+
+### Features
+
+* **compute:** backup removal and tweaking ([b2d6cb4](https://github.com/bergsv/tf-az-module-compute/commit/b2d6cb451464de5d0c6fb66b9eeb552031205296))
+* **compute:** feature removal and tweaking ([21b857a](https://github.com/bergsv/tf-az-module-compute/commit/21b857a2647accd7a2794f56aeb9546da2a65645))
+
 ## [0.2.1](https://github.com/bergsv/tf-az-module-compute/compare/v0.2.0...v0.2.1) (2025-03-12)
 
 
