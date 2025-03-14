@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/bergsv/tf-az-module-compute/compare/v0.3.0...v0.3.1) (2025-03-14)
+
+
+### Bug Fixes
+
+* **compute:** resource group creation ([cd55c7a](https://github.com/bergsv/tf-az-module-compute/commit/cd55c7af8c144cb3bdebc69bbb22849ff92a7ea1))
+
 ## [0.3.0](https://github.com/bergsv/tf-az-module-compute/compare/v0.2.1...v0.3.0) (2025-03-14)
 
 
